@@ -18,3 +18,20 @@ func argumentToBinary(argument string) []bool {
 	}
 	return bits
 }
+func byteToBitSlice(byteSlice *uint8) []bool {
+	bits := make([]bool, 8)
+	var i uint8
+	//Loop through the byte and turn it into bit sequence using AND and masking
+	//Using an unsigned integer, so
+	//7 -> 0
+	for i = 0; i < 8; i++ {
+		mask := byte(1 << i)
+		if (*byteSlice & mask) > 0 {
+			bits[7-i] = true
+		} else {
+			bits[7-i] = false
+		}
+
+	}
+	return bits
+}
