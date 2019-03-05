@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
+	"runtime/pprof"
 )
 
 func main() {
@@ -11,6 +13,12 @@ func main() {
 	operation := os.Args[2]
 	search := os.Args[3]
 	fmt.Println("Searching for " + search + " in " + filepath)
+	benchmark, err := os.Create("benchmark.txt") // can use open and O_CREAT instead
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(benchmark)
+	defer pprof.StopCPUProfile()
 	//Turn the searched string, usually in the format of "0101010001010000000101010" into a slice of bools
 	searchSlice := argumentToBinary(search)
 	if operation == "f" {
@@ -20,8 +28,6 @@ func main() {
 		replace := os.Args[4]
 		replaceSlice := argumentToBinary(replace)
 		readBinaryFile(filepath, searchSlice, "fr", replaceSlice)
-		fmt.Print("Replacing ...")
-		fmt.Println(replace)
 	}
 }
 func errCheck(err error) {
