@@ -95,4 +95,5 @@ func writeBinaryFile(fileName string, bytesToWrite *[]byte, bufferOverflow int64
 	errCheck(err)
 	_, err = file.WriteAt(*bytesToWrite, bufferOverflow)
 	errCheck(err)
+	os.Exit(0)
 }

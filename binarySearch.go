@@ -109,7 +109,6 @@ func binarySearch(search *[]bool, bits *[]bool, bufferOverflow int64) []int {
 		linkedList.appendElement((*bits)[i])
 
 	}
-	linkedList.printEverything()
 	fmt.Println("")
 	return matchingIndexes
 }
