@@ -19,6 +19,28 @@ func (linkedList *LinkedList) append(nextBit bool) {
 	linkedList.end = node
 }
 
+//Get elements, replace the sublist on an index
+//Take the original, loop to the targeted node, unlink the next node,
+//Link the next node to the start node of the replacement lsit
+//Put the end of replacement list to the next node that got unlinked before
+func (linkedList *LinkedList) replaceSublist(replacementIndex int, originalList *LinkedList, replacementList *LinkedList) *LinkedList {
+	//initialize the first value
+	originalNode := originalList.start
+	replacementNode := replacementList.start
+	//Find the index we're looking for
+	for i := 0; i < replacementIndex && originalNode.next != nil; i++ {
+		originalNode = originalNode.next
+		if i == replacementIndex {
+			//Unlink the culprit node
+			cachedNode := originalNode.next
+			originalNode.next = replacementNode
+			//Link the end of the replacementnode to the start of the unlinked node
+			originalList.end = cachedNode
+		}
+	}
+	return originalList
+}
+
 //Returns the indexes, where the bits are matching
 //Needs the required search bool array and data array, which is the file we're parsing through in binary form
 func binarySearch(search []bool, data []bool, bufferOverflow int) []int {
@@ -77,6 +99,12 @@ func binaryReplace(search []bool, data []bool, replace []bool) []bool {
 	var diff = len(replace) - len(search)
 	firstNode := &Node{data[0], nil}
 	list := LinkedList{firstNode, firstNode, 1}
+	//Create a replacement linked list
+	firstReplaceNode := &Node{replace[0], nil}
+	replaceList := LinkedList{firstReplaceNode, firstReplaceNode, 1}
+	for i := 0; i < len(replace); i++ {
+		replaceList.append(replace[i])
+	}
 	replacedData := make([]bool, 0, len(data)+(len(matchedData)*diff))
 	if diff == 0 {
 		replacedData = data
@@ -105,10 +133,13 @@ func binaryReplace(search []bool, data []bool, replace []bool) []bool {
 				}
 			}
 			if inMatchedData {
-				for z := 0; z < len(replace); z++ {
-					list.append(replace[z])
-					//replacedData = append(replacedData, replace[z])
-				}
+				//for z := 0; z < len(replace); z++ {
+				//Big bottleneck here
+				list.replaceSublist(i, &list, &replaceList)
+				//list.append(replace[z])
+				//replacedData = append(replacedData, replace[z])
+
+				//}
 				i += diff - 1
 			} else {
 				list.append(data[i])
