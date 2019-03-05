@@ -30,19 +30,16 @@ func errCheck(err error) {
 func readBinaryFile(filepath string, searchSlice []bool, operation string, replaceSlice []bool) {
 	file, err := os.Open(filepath)
 	defer file.Close()
-	bufferOverflow := 0
 	fileInfo, err := file.Stat()
 	errCheck(err)
 	fileSize := fileInfo.Size()
 	fmt.Print("File size is ")
 	fmt.Print(fileSize)
 	//Make sure the search slice fits, this will be our buffer
+	//TODO: Re-add the buffer
 	var bufferSize int64
-	if fileSize > 4096 {
-		bufferSize = 4096
-	} else {
-		bufferSize = fileSize
-	}
+	bufferSize = fileSize
+	var bufferOverflow int64 = 0
 	//Data where we put the read bytes into
 	data := make([]byte, bufferSize)
 	//Bits where we put arrays of bools, signifying bits
@@ -70,13 +67,28 @@ func readBinaryFile(filepath string, searchSlice []bool, operation string, repla
 			bits = append(bits, byteToBitSlice(&aByte)...)
 		}
 		if operation == "f" {
-			binarySearch(searchSlice, bits, bufferOverflow)
+			binarySearch(&searchSlice, &bits, bufferOverflow)
+			bufferOverflow += 4096
 		}
 		if operation == "fr" {
-			binaryReplace(searchSlice, bits, replaceSlice)
+			bytesToWrite := binaryReplace(&searchSlice, &bits, &replaceSlice, bufferOverflow)
+			fmt.Println(len(bytesToWrite))
+			writeBinaryFile("out", &bytesToWrite, bufferOverflow)
+			bufferOverflow += 4096
+
 		}
 		bits = nil
 		//So we're aware of indexes if the file is larger
-		bufferOverflow += 4096
 	}
+}
+func writeBinaryFile(fileName string, bytesToWrite *[]byte, bufferOverflow int64) {
+	fmt.Println("Writing file")
+	file, err := os.Create(fileName)
+	errCheck(err)
+	file, err = os.OpenFile(fileName, os.O_RDWR, 0644)
+	defer file.Close()
+	errCheck(err)
+	fmt.Println("LENGTH ")
+	_, err = file.WriteAt(*bytesToWrite, bufferOverflow)
+	errCheck(err)
 }
