@@ -38,7 +38,7 @@ func readBinaryFile(filepath string, searchSlice []bool, operation string, repla
 	//Make sure the search slice fits, this will be our buffer
 	//TODO: Re-add the buffer
 	var bufferSize int64
-	bufferSize = fileSize
+	bufferSize = 8192
 	var bufferOverflow int64 = 0
 	//Data where we put the read bytes into
 	data := make([]byte, bufferSize)
@@ -68,13 +68,13 @@ func readBinaryFile(filepath string, searchSlice []bool, operation string, repla
 		}
 		if operation == "f" {
 			binarySearch(&searchSlice, &bits, bufferOverflow)
-			bufferOverflow += 4096
+			bufferOverflow += 8192
 		}
 		if operation == "fr" {
 			bytesToWrite := binaryReplace(&searchSlice, &bits, &replaceSlice, bufferOverflow)
 			fmt.Println(len(bytesToWrite))
 			writeBinaryFile("out", &bytesToWrite, bufferOverflow)
-			bufferOverflow += 4096
+			bufferOverflow += 8192
 
 		}
 		bits = nil
@@ -83,9 +83,11 @@ func readBinaryFile(filepath string, searchSlice []bool, operation string, repla
 }
 func writeBinaryFile(fileName string, bytesToWrite *[]byte, bufferOverflow int64) {
 	fmt.Println("Writing file")
-	file, err := os.Create(fileName)
-	errCheck(err)
-	file, err = os.OpenFile(fileName, os.O_RDWR, 0644)
+	if bufferOverflow == 0 {
+		_, err := os.Create(fileName)
+		errCheck(err)
+	}
+	file, err := os.OpenFile(fileName, os.O_RDWR, 0644)
 	defer file.Close()
 	errCheck(err)
 	fmt.Println("LENGTH ")

@@ -19,13 +19,8 @@ func binarySearch(search *[]bool, data *[]bool, bufferOverflow int64) []int {
 	matches discovered only triggers once per full match, so if we have 1 matching 40character match, matchesDiscovered is 1
 	this value is then used for the return array, so its well sized*/
 	matchesDiscovered := 0
-	var i int
-	if bufferOverflow > 0 {
-		i = 0
-	} else {
-		i = 112
-	}
-	for ; i < len(*data) && i+advance < len(*data); i++ {
+
+	for i := 0; i < len(*data) && i+advance < len(*data); i++ {
 		for j := 0; j < advance; j++ {
 			if (*data)[i+j] == (*search)[j] {
 				//Look for identical matches, every element needs to match
