@@ -35,10 +35,7 @@ func readBinaryFile(filepath string, searchSlice []bool, operation string, repla
 	fileSize := fileInfo.Size()
 	fmt.Print("File size is ")
 	fmt.Print(fileSize)
-	//Make sure the search slice fits, this will be our b
-	//
-	//uffer
-	//TODO: Re-add the buffer
+	//Make sure the search slice fits, this will be our buffer
 	var bufferSize int64
 	bufferSize = 8192
 	if fileSize < bufferSize {
@@ -79,11 +76,12 @@ func readBinaryFile(filepath string, searchSlice []bool, operation string, repla
 			writeBinaryFile("out", &bytesToWrite, bufferOverflow)
 
 		}
+		//So we're aware of indexes if the file is larger than buffer size
 		bufferOverflow += bufferSize
 
 		bits = nil
-		//So we're aware of indexes if the file is larger
 	}
+	os.Exit(0)
 }
 func writeBinaryFile(fileName string, bytesToWrite *[]byte, bufferOverflow int64) {
 	if bufferOverflow == 0 {
@@ -95,5 +93,4 @@ func writeBinaryFile(fileName string, bytesToWrite *[]byte, bufferOverflow int64
 	errCheck(err)
 	_, err = file.WriteAt(*bytesToWrite, bufferOverflow)
 	errCheck(err)
-	os.Exit(0)
 }

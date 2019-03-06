@@ -1,70 +1,6 @@
 package main
 
-import (
-	"fmt"
-)
-
-type Node struct {
-	bit  bool
-	next *Node
-}
-type LinkedList struct {
-	start *Node
-	end   *Node
-	//The node that denotes the first one, that we manually reattached when replacing
-	//So if we replaced 0101 with 00001010|1| the |1| is the node that we cache so we can access it for futher iterations faster
-	cachedNode *Node
-}
-
-//Add an element to the end of a linked list
-func (linkedList *LinkedList) appendElement(bit bool) {
-	//Add an element to the edge of the linked list
-	node := &Node{bit, nil}
-	linkedList.end.next = node
-	//push the end of the linkedList for another element to the right
-	linkedList.end = node
-}
-func (linkedList *LinkedList) printEverything() {
-	node := linkedList.start
-	count := 0
-	for {
-		if node != nil {
-			fmt.Print(node.bit)
-			fmt.Printf(" %d ", count)
-			node = node.next
-		}
-		count++
-	}
-}
-
-//Replace the LinkedList at an index with the replacedLinkedList then reattach the end of replacedLinkedList with the reattached node
-//Reattached node is kept track of in the
-func (linkedList *LinkedList) replaceSublist(replaceLinkedList *LinkedList, startIndex int, replaceSize int, searchSize int) {
-	//The cached node is our starting point, initialized to linkedList.start
-	startNode := linkedList.cachedNode
-	//In case we want to replace the first element already, we just append the replaceLinkedList
-	if startIndex == 0 {
-		linkedList.start = replaceLinkedList.start
-		for i := 1; i < replaceSize; i++ {
-			linkedList.appendElement(replaceLinkedList.start.next.bit)
-		}
-	}
-	for i := 0; i < startIndex; i++ {
-		currentNode := startNode.next
-		if i == startIndex {
-			//Find the last replacement
-			for j := 0; j <= searchSize; j++ {
-				tempNode := currentNode
-				if j == searchSize {
-					linkedList.cachedNode = tempNode.next
-				}
-			}
-			//Add the replacement to the end
-			currentNode.next = replaceLinkedList.start
-
-		}
-	}
-}
+import "fmt"
 
 //Returns the indexes, where the bits are matching
 //Needs the required search bool array and bits array, which is the file we're parsing through in binary form
@@ -80,11 +16,13 @@ func binarySearch(search *[]bool, bits *[]bool, bufferOverflow int64) []int {
 	/*A count of matching sequences, while matchCount counts amount of matches of a single element and resets on mismatches and full matches
 	matches discovered only triggers once per full match, so if we have 1 matching 40character match, matchesDiscovered is 1
 	this value is then used for the return array, so its well sized*/
+	i := 0
+	if bufferOverflow == 0 {
+		i = 112
+	}
 	matchesDiscovered := 0
-	//TODO: len(*bits) gets very odd values
-	startNode := &Node{(*bits)[0], nil}
-	linkedList := LinkedList{startNode, startNode, startNode}
-	for i := 0; i < len(*bits) && i+advance < len(*bits); i++ {
+	//Probably wont be matching at 0, TODO: fix for last and first elements
+	for ; i < len(*bits) && i+advance < len(*bits); i++ {
 		for j := 0; j < advance; j++ {
 			if (*bits)[i+j] == (*search)[j] {
 				//Look for identical matches, every element needs to match
@@ -100,16 +38,13 @@ func binarySearch(search *[]bool, bits *[]bool, bufferOverflow int64) []int {
 			//Whenever we fill up multiple buffers we need to take that into account when printing out indexes
 			since := int64(i)
 			fmt.Print(since + bufferOverflow*8)
-			fmt.Print(" , ")
+			fmt.Print(" ")
 			matchingIndexes = matchingIndexes[:matchesDiscovered+1]
 			matchingIndexes[matchesDiscovered] = int(since)
 			matchesDiscovered++
 		}
-		//build linkedList out of created data
-		linkedList.appendElement((*bits)[i])
 
 	}
-	fmt.Println("")
 	return matchingIndexes
 }
 
@@ -123,7 +58,8 @@ func binaryReplace(search *[]bool, bits *[]bool, replace *[]bool, bufferOverflow
 	//Bufferoverflow isn't important, we replace on indexes, no matter what, the search needs it to print out the names
 	matchedData := binarySearch(search, bits, bufferOverflow)
 	var diff = len(*replace) - len(*search)
-	replacedData := make([]bool, 0, len(*bits)+(len(matchedData)*diff))
+	//Create an array/slice that is large enough to fit every replacement diff times
+	replacedData := make([]bool, len(*bits)+(len(matchedData)*diff))
 	if diff == 0 {
 		replacedData = *bits
 		for _, value := range matchedData {
@@ -139,6 +75,7 @@ func binaryReplace(search *[]bool, bits *[]bool, replace *[]bool, bufferOverflow
 
 		}
 	} else if diff > 0 {
+		replacementCounter := 0
 		var inMatchedData bool
 		for i := 0; i < len(*bits); i++ {
 			for j := 0; j < len(matchedData); j++ {
@@ -151,17 +88,27 @@ func binaryReplace(search *[]bool, bits *[]bool, replace *[]bool, bufferOverflow
 			}
 			if inMatchedData {
 				for z := 0; z < len(*replace); z++ {
-					replacedData = append(replacedData, (*replace)[z])
+					index := i + (replacementCounter * diff) + z
+					replacedData[index] = (*replace)[z]
+					fmt.Print("i ", i, " ")
+					fmt.Print("Replacing on: ")
+					fmt.Println(index)
+					//replacedData = append(replacedData, (*replace)[z])
 				}
-				i += diff - 1
+				i += len(*search) - 1
+				replacementCounter++
 			} else {
-				replacedData = append(replacedData, (*bits)[i])
+				index := i + (replacementCounter * diff)
+				fmt.Print("i ", i, " ")
+				fmt.Print("Adding stuff normally: ")
+				fmt.Println(index)
+				replacedData[index] = (*bits)[i]
 			}
 		}
 	}
-	//TODO: Solve with linked list
 	bytesToWrite := make([]byte, len(replacedData)/8)
 	var sentSlice []bool
+	//TODO: Merge the with the replacing, replacing can be merged with the reading...AKA replace as you read
 	for i := 0; i < len(replacedData); i += 8 {
 		for j := 0; j < 8; j++ {
 			sentSlice = replacedData[i : i+j+1]
