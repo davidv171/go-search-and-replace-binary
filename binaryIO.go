@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
@@ -83,6 +85,8 @@ func readBinaryFile(filepath string, searchSlice []bool, operation string, repla
 	}
 	os.Exit(0)
 }
+
+//Writes into the binary file at bufferOverflow offset
 func writeBinaryFile(fileName string, bytesToWrite *[]byte, bufferOverflow int64) {
 	if bufferOverflow == 0 {
 		_, err := os.Create(fileName)
@@ -93,4 +97,26 @@ func writeBinaryFile(fileName string, bytesToWrite *[]byte, bufferOverflow int64
 	errCheck(err)
 	_, err = file.WriteAt(*bytesToWrite, bufferOverflow)
 	errCheck(err)
+}
+
+//- Binarni zapis ali branje podatkovnih tipov 32-bitni int, 32-bitni float in 8-bitni char.
+//Read amount of data, and based on that conver to type
+func bytesToInt32(bytesToConvert []byte) uint32 {
+	var data uint32
+	data = binary.BigEndian.Uint32(bytesToConvert)
+	return data
+}
+func bytesToFloat32(bytesToConvert []byte) float32 {
+	var data float32
+	buff := bytes.NewReader(bytesToConvert)
+	err := binary.Read(buff, binary.LittleEndian, &data)
+	errCheck(err)
+	return data
+}
+func bytesTo8Char(bytesToConvert []byte) uint8 {
+	var data uint8
+	buff := bytes.NewReader(bytesToConvert)
+	err := binary.Read(buff, binary.LittleEndian, &data)
+	errCheck(err)
+	return data
 }

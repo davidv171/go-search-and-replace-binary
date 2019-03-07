@@ -17,9 +17,6 @@ func binarySearch(search *[]bool, bits *[]bool, bufferOverflow int64) []int {
 	matches discovered only triggers once per full match, so if we have 1 matching 40character match, matchesDiscovered is 1
 	this value is then used for the return array, so its well sized*/
 	i := 0
-	if bufferOverflow == 0 {
-		i = 112
-	}
 	matchesDiscovered := 0
 	//Probably wont be matching at 0, TODO: fix for last and first elements
 	for ; i < len(*bits) && i+advance < len(*bits); i++ {
@@ -74,7 +71,7 @@ func binaryReplace(search *[]bool, bits *[]bool, replace *[]bool, bufferOverflow
 			}
 
 		}
-	} else if diff > 0 {
+	} else {
 		replacementCounter := 0
 		var inMatchedData bool
 		for i := 0; i < len(*bits); i++ {
@@ -87,21 +84,17 @@ func binaryReplace(search *[]bool, bits *[]bool, replace *[]bool, bufferOverflow
 				}
 			}
 			if inMatchedData {
+				/*If its matching, replace the indexes of the fresh array, but
+				KEEP the loop through the original bits array the same, only bump it up for the difference, to compensate
+				keep track of the times we've replaced something*/
 				for z := 0; z < len(*replace); z++ {
 					index := i + (replacementCounter * diff) + z
 					replacedData[index] = (*replace)[z]
-					fmt.Print("i ", i, " ")
-					fmt.Print("Replacing on: ")
-					fmt.Println(index)
-					//replacedData = append(replacedData, (*replace)[z])
 				}
 				i += len(*search) - 1
 				replacementCounter++
 			} else {
 				index := i + (replacementCounter * diff)
-				fmt.Print("i ", i, " ")
-				fmt.Print("Adding stuff normally: ")
-				fmt.Println(index)
 				replacedData[index] = (*bits)[i]
 			}
 		}
