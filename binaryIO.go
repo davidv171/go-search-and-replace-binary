@@ -68,6 +68,8 @@ func readBinaryFile(filepath string, searchSlice []bool, operation string, repla
 		}
 		data = data[:readByte]
 		for _, aByte := range data {
+			//TODO: remove append this is not performant
+			//Unnecessary complexity, we could be doing this per byte array of buffer size instead of per each byte
 			bits = append(bits, byteToBitSlice(&aByte)...)
 		}
 		if operation == "f" {
@@ -119,4 +121,28 @@ func bytesTo8Char(bytesToConvert []byte) uint8 {
 	err := binary.Read(buff, binary.LittleEndian, &data)
 	errCheck(err)
 	return data
+}
+func float64ToBytes(f float64) []byte {
+	var buf bytes.Buffer
+	err := binary.Write(&buf, binary.BigEndian, f)
+	if err != nil {
+		fmt.Println("binary.Write failed:", err)
+	}
+	return buf.Bytes()
+}
+func float32ToBytes(f float32) []byte {
+	var buf bytes.Buffer
+	err := binary.Write(&buf, binary.BigEndian, f)
+	if err != nil {
+		fmt.Println("binary.Write failed:", err)
+	}
+	return buf.Bytes()
+}
+func int32ToBytes(f int32) []byte {
+	var buf bytes.Buffer
+	err := binary.Write(&buf, binary.BigEndian, f)
+	if err != nil {
+		fmt.Println("binary.Write failed:", err)
+	}
+	return buf.Bytes()
 }
