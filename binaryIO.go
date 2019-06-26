@@ -31,6 +31,10 @@ func errCheck(err error) {
 }
 func readBinaryFile(filepath string, searchSlice []bool, operation string, replaceSlice []bool) {
 	file, err := os.Open(filepath)
+	if err != nil {
+		fmt.Println("No file ", filepath,  " exists ")
+		os.Exit(1)
+	}
 	defer file.Close()
 	fileInfo, err := file.Stat()
 	errCheck(err)
@@ -122,9 +126,19 @@ func bytesTo8Char(bytesToConvert []byte) uint8 {
 	errCheck(err)
 	return data
 }
+
+func charToBytes(f rune) []byte {
+	var buf bytes.Buffer
+	err := binary.Write(&buf, binary.LittleEndian, f)
+	if err != nil {
+		fmt.Println("binary.Write failed:", err)
+	}
+	return buf.Bytes()
+}
+
 func float64ToBytes(f float64) []byte {
 	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, f)
+	err := binary.Write(&buf, binary.LittleEndian, f)
 	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
@@ -132,7 +146,7 @@ func float64ToBytes(f float64) []byte {
 }
 func float32ToBytes(f float32) []byte {
 	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, f)
+	err := binary.Write(&buf, binary.LittleEndian, f)
 	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
@@ -140,7 +154,7 @@ func float32ToBytes(f float32) []byte {
 }
 func int32ToBytes(f int32) []byte {
 	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, f)
+	err := binary.Write(&buf, binary.LittleEndian, f)
 	if err != nil {
 		fmt.Println("binary.Write failed:", err)
 	}
